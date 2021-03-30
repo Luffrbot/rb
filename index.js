@@ -90,7 +90,7 @@ blocked = []
             })
             if (position !== false) {
                 _level[position].xp += amount
-                fs.writeFileSync('./database/user/level.json', JSON.stringify(_level))
+                fs.writeFileSync('./bot/level.json', JSON.stringify(_level))
             }
         }
 
@@ -103,14 +103,14 @@ blocked = []
             })
             if (position !== false) {
                 _level[position].level += amount
-                fs.writeFileSync('./database/user/level.json', JSON.stringify(_level))
+                fs.writeFileSync('./bot/level.json', JSON.stringify(_level))
             }
         }
 
         const addLevelingId = (userId) => {
             const obj = {jid: userId, xp: 1, level: 1}
             _level.push(obj)
-            fs.writeFileSync('./database/user/level.json', JSON.stringify(_level))
+            fs.writeFileSync('./bot/level.json', JSON.stringify(_level))
         }
         
                 const getLimit = (sender) => {
@@ -151,6 +151,23 @@ blocked = []
             }
         }
 
+                    if (isGroup && isLevelingOn) {
+            const currentLevel = getLevelingLevel(sender)
+            const checkId = getLevelingId(sender)
+            try {
+                if (currentLevel === undefined && checkId === undefined) addLevelingId(sender)
+                const amountXp = Math.floor(Math.random() * 10) + 500
+                const requiredXp = 10000 * (Math.pow(2, currentLevel) - 1)
+                const getLevel = getLevelingLevel(sender)
+                addLevelingXp(sender, amountXp)
+                if (requiredXp <= getLevelingXp(sender)) {
+                    addLevelingLevel(sender, 1)
+                    await reply(`*「 LEVEL UP 」*\n\n➸ *Nome*: ${sender}\n➸ *XP*: ${getLevelingXp(sender)}\n➸ *Level*: ${getLevel} -> ${getLevelingLevel(sender)}\n\nParabéns!!  🎉🎉`)
+                }
+            } catch (err) {
+                console.error(err)
+            }
+        }
 
 
 const time = moment().tz('Asia/Jakarta').format("HH:mm:ss")
@@ -318,25 +335,7 @@ client.on('group-participants-update', async (anu) => {
 			if (!isCmd && isGroup) console.log('\x1b[1;31m~\x1b[1;37m>', '[\x1b[1;31mRECV\x1b[1;37m]', time, color('Message'), 'from', color(sender.split('@')[0]), 'in', color(groupName), 'args :', color(args.length))
 			switch(command) {
 				
-           
-            if (isGroup && isLevelingOn) {
-            const currentLevel = getLevelingLevel(sender)
-            const checkId = getLevelingId(sender)
-            try {
-                if (currentLevel === undefined && checkId === undefined) addLevelingId(sender)
-                const amountXp = Math.floor(Math.random() * 10) + 500
-                const requiredXp = 10000 * (Math.pow(2, currentLevel) - 1)
-                const getLevel = getLevelingLevel(sender)
-                addLevelingXp(sender, amountXp)
-                if (requiredXp <= getLevelingXp(sender)) {
-                    addLevelingLevel(sender, 1)
-                    await reply(`*「 LEVEL UP 」*\n\n➸ *Nome*: ${sender}\n➸ *XP*: ${getLevelingXp(sender)}\n➸ *Level*: ${getLevel} -> ${getLevelingLevel(sender)}\n\nParabéns!!  🎉🎉`)
-                }
-            } catch (err) {
-                console.error(err)
-            }
-        }
-
+          
 
 
 				case 'help': 
