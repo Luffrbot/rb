@@ -292,6 +292,7 @@ client.on('group-participants-update', async (anu) => {
 			const isWelkom = isGroup ? welkom.includes(from) : false
 			const isNsfw = isGroup ? nsfw.includes(from) : false
 			const isSimi = isGroup ? samih.includes(from) : false
+			const isLevelingOn = isGroup ? _leveling.includes(groupId) : false
 			const isOwner = ownerNumber.includes(sender)
 			const isUrl = (url) => {
 			    return url.match(new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/, 'gi'))
@@ -316,7 +317,30 @@ client.on('group-participants-update', async (anu) => {
 			if (isCmd && isGroup) console.log('\x1b[1;31m~\x1b[1;37m>', '[\x1b[1;32mEXEC\x1b[1;37m]', time, color(command), 'from', color(sender.split('@')[0]), 'in', color(groupName), 'args :', color(args.length))
 			if (!isCmd && isGroup) console.log('\x1b[1;31m~\x1b[1;37m>', '[\x1b[1;31mRECV\x1b[1;37m]', time, color('Message'), 'from', color(sender.split('@')[0]), 'in', color(groupName), 'args :', color(args.length))
 			switch(command) {
+				
+           
+            if (isGroup && isLevelingOn) {
+            const currentLevel = getLevelingLevel(sender)
+            const checkId = getLevelingId(sender)
+            try {
+                if (currentLevel === undefined && checkId === undefined) addLevelingId(sender)
+                const amountXp = Math.floor(Math.random() * 10) + 500
+                const requiredXp = 10000 * (Math.pow(2, currentLevel) - 1)
+                const getLevel = getLevelingLevel(sender)
+                addLevelingXp(sender, amountXp)
+                if (requiredXp <= getLevelingXp(sender)) {
+                    addLevelingLevel(sender, 1)
+                    await reply(`*「 LEVEL UP 」*\n\n➸ *Nome*: ${sender}\n➸ *XP*: ${getLevelingXp(sender)}\n➸ *Level*: ${getLevel} -> ${getLevelingLevel(sender)}\n\nParabéns!!  🎉🎉`)
+                }
+            } catch (err) {
+                console.error(err)
+            }
+        }
+
+
+
 				case 'help': 
+
 				case 'menu':
 					client.sendMessage(from, help(prefix), text)
 					break
@@ -324,6 +348,43 @@ client.on('group-participants-update', async (anu) => {
 				case 'donate':
 					client.sendMessage(from, donasi(), text)
 				break
+               
+
+
+                case 'level':
+					if (!isLevelingOn) return reply(mess.levelnoton)
+					if (!isGroup) return reply(mess.only.group)
+					const userLevel = getLevelingLevel(sender)
+					const userXp = getLevelingXp(sender)
+					if (userLevel === undefined && userXp === undefined) return reply(mess.levelnol)
+					sem = sender.replace('@s.whatsapp.net','')
+					resul = `┏━━❉ *LEVEL* ❉━━\n┣⊱ Nome : ${sem}\n┣⊱ Seu XP :  ${userXp}\n┣⊱ Seu Level : ${userLevel}\n┗━━━━━━━━━━━━`
+					client.sendMessage(from, resul, text, { quoted: mek})
+					.catch(async (err) => {
+                    console.error(err)
+                    await reply(`Error!\n${err}`)
+                    })
+                    break
+                case 'leveling':
+					if (!isGroup) return reply(mess.only.group)
+					if (!isGroupAdmins) return reply(mess.only.admin)
+					if (args.length < 1) return reply('Boo :𝘃')
+					if (args[0] === 'on') {
+                    if (isLevelingOn) return reply('*O comando de level já estava ativo*')
+                    _leveling.push(groupId)
+                    fs.writeFileSync('./bot/leveling.json', JSON.stringify(_leveling))
+                     reply(mess.levelon)
+					} else if (args[0] === 'off') {
+                    _leveling.splice(groupId, 1)
+                    fs.writeFileSync('./bot/leveling.json', JSON.stringify(_leveling))
+                     reply(mess.leveloff)
+					} else {
+					reply('Use ${prefix}leveling on para ativar e ${prefix}leveling off para desativar')
+					}
+					break
+
+
+
 				case 'info':
 					me = client.user
 					uptime = process.uptime()
